@@ -1,0 +1,12 @@
+{
+  "name": "isnipe",
+  "version": "0.0.1",
+  "description": "A modular sniper",
+  "main": "src/isnipe.js",
+  "author": "ilexite",
+  "license": "GPL-3.0",
+  "private": false,
+  "dependencies": {
+    "ini": "^3.0.1"
+  }
+}
