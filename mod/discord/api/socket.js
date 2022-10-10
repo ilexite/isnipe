@@ -1,5 +1,6 @@
 const { EventEmitter } = require("node:events");
 
+// Finds nitro codes in messages
 const regex = require("../util/regex");
 
 const WebSocket = require("ws");
@@ -11,9 +12,10 @@ class Socket {
 		this.sniper = sniper;
 
 		this.events = new EventEmitter();
-		this.session = {};
+		this.session = {}; // Stores session info
 
 		this.events.on("message", msg => {
+			// seq should be incremented, but we want to avoid reconnecting.
 			this.session.seq = msg.s;
 			this.events.emit(msg.t ?? msg.op, msg.d);
 		});
@@ -44,22 +46,29 @@ class Socket {
 			}
 		});
 
+		// 10 = HELLO
+		// Identify the client
 		this.events.on(10, msg => this.ident(msg));
 
+		// Client is ready, store some useful info.
 		this.events.on("READY", msg => {
 			this.session.id = msg.session_id;
 			this.user = msg.user;
 			this.session.readymsg = msg;
 		});
 
+		// Check for message events where codes could appear
 		this.events.on("MESSAGE_CREATE", msg => this.processMessage(msg));
 		this.events.on("MESSAGE_UPDATE", msg => this.processMessage(msg));
 
+		// Connect to the gateway
 		this.connect();
 	}
 
 	connect() {
 		this.ws = new WebSocket("wss://gateway.discord.gg/?v=9&encoding=etf");
+
+		// WebSocket events have to be added again when we reconnect.
 
 		this.ws.on("message", msg =>
 			this.events.emit("message", erlpack.unpack(msg)),
@@ -70,6 +79,7 @@ class Socket {
 	}
 
 	send(data) {
+		// Only send data when the socket is open
 		if (this.ws.readyState == WebSocket.OPEN)
 			this.ws.send(erlpack.pack(data));
 	}
@@ -77,6 +87,7 @@ class Socket {
 	ident(msg) {
 		this.session.hbint = msg.heartbeat_interval;
 
+		// Send heartbeats when required
 		this.session.beater = setInterval(() => {
 			this.send({
 				op: 1,
@@ -87,7 +98,7 @@ class Socket {
 		this.send(
 			this.session.id == undefined
 				? {
-						op: 2,
+						op: 2, // IDENTIFY
 						d: {
 							token: this.token,
 							properties: {},
@@ -97,7 +108,7 @@ class Socket {
 						},
 				  }
 				: {
-						op: 6,
+						op: 6, // RESUME
 						d: {
 							token: this.token,
 							session_id: this.session.id,
@@ -107,6 +118,7 @@ class Socket {
 		);
 	}
 
+	// Check for any codes in messages
 	processMessage(msg) {
 		if (!msg.content) return;
 

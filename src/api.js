@@ -1,5 +1,6 @@
 const util = require("./util");
 
+// All modules must inherit this class
 class baseClass {
 	constructor(id, name, description) {
 		this.id = id;

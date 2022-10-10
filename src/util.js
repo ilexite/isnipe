@@ -1,5 +1,6 @@
 const nodeutil = require("node:util");
 
+// https://en.wikipedia.org/wiki/ANSI_escape_code
 let formats = Object.fromEntries(
 	Object.entries({
 		reset: 0,

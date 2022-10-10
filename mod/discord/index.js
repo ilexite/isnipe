@@ -6,6 +6,7 @@ const dcapi = require("./api");
 
 const path = require("node:path");
 
+// Messages which are printed when something happens
 const messages = [
 	"Running with %d slaves and %d masters",
 	"Successfully redeemed code %s in %fms on account %s" + util.fmt("bell"),
@@ -19,8 +20,12 @@ class Discord extends api.baseClass {
 		this.sd = sd;
 		this.config = config;
 
+		// Which master redeems the code. Incremented every time a valid code is
+		// redeemed
 		this.which = 0;
 
+		// Cache of codes which are tried. This hopes to stop us from redeeming
+		// the same code more than once.
 		this.cache = [];
 	}
 
@@ -36,22 +41,30 @@ class Discord extends api.baseClass {
 	}
 
 	async redeem(code) {
+		// Do nothing if this code has been tried already.
 		if (this.cache.includes(code)) return;
 
 		const start = performance.now();
 
+		// Redeem the code
 		const result = await this.masters[this.which].redeem(code);
 
+		// Calculate time (2 decimal points)
 		const time = Math.floor((performance.now() - start) * 100) / 100;
 
+		// Add the code to the cache
 		this.cache.push(code);
 
 		if (result.success) {
+			// Print success message
 			this.logfmt(1, code, time, which);
 
+			// Increment `which`. If which exceeds the number of masters, revert
+			// to 0
 			which++;
 			which %= this.masters.length;
 		} else {
+			// Print failure message
 			this.logfmt(2, code, time);
 		}
 	}
@@ -65,10 +78,12 @@ class Discord extends api.baseClass {
 		this.active = true;
 		this.log("Started!");
 
+		// Create a socket client for each slave
 		this.slaves = (await this.getTokens("slaves")).map(
 			token => new dcapi.Socket(token, this),
 		);
 
+		// Create a REST client for each master
 		this.masters = (await this.getTokens("masters"))
 			.map(token => new dcapi.REST(token, this))
 			.filter(async master => await master.good());

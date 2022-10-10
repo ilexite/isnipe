@@ -1,17 +1,21 @@
+// Local files
 const paths = require("./paths");
 const bootstrapper = require("./bootstrapper");
 const SharedData = require("./sharedData");
 
 const package = require("../package.json");
 
+// Node modules
 const fs = require("node:fs/promises");
 const fss = require("node:fs");
 const path = require("node:path");
 const os = require("node:os");
 
+// NPM modules
 const ini = require("ini");
 const { Command } = require("commander");
 
+// Commander stuff; responsible for command-line arguments
 const program = new Command();
 
 program
@@ -31,13 +35,16 @@ program
 
 program.parse();
 
+// Entry point; assuming `run` command is used.
 async function main() {
 	const sd = new SharedData();
 	const config = await preprocess(await readini(paths.configFile));
 
+	// Get modules
 	let mods = await bootstrapper.startup(sd, config);
 	sd.set("modules", mods);
 
+	// Start enabled modules
 	for (const mod of sd.get("modules")) {
 		if (!config[mod.id]?.enabled) continue;
 		mod.start();
@@ -51,11 +58,13 @@ async function main() {
 		process.exit(0);
 	};
 
-	process.on("SIGINT", stop);
-	process.on("SIGTERM", stop);
+	process.on("SIGINT", stop); // Ctrl+C
+	process.on("SIGTERM", stop); // `kill`, `pkill`, `killall`
 }
 
+// Debug info
 async function dump() {
+	// Environment info
 	console.log("== Begin Info ==");
 	console.log("Version: %s", package.version);
 	console.log("OS: %s", os.platform());
@@ -65,6 +74,7 @@ async function dump() {
 
 	const config = await preprocess(await readini(paths.configFile));
 
+	// Config as one object
 	console.log("== Begin Config ==");
 	console.log(config);
 	console.log("== End Config ==");
@@ -81,6 +91,7 @@ async function readini(file) {
 	);
 }
 
+// Replace `include = file.ini` with `file.ini`'s contents
 async function preprocess(obj) {
 	let copy = obj;
 
