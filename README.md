@@ -1,4 +1,3 @@
 # isnipe
 
 A modular sniper.
-
