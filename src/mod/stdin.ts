@@ -5,7 +5,7 @@ export default class StandardInput extends Module {
 		super(program, config, {
 			id: "stdin",
 			name: "Standard Input",
-			version: "0.0.1",
+			version: "0.0.2",
 			description: "Control the program through the console.",
 			author: "ilexite",
 		});
@@ -47,7 +47,10 @@ export default class StandardInput extends Module {
 	private listMods() {
 		this.log("Currently active modules:");
 		this.program.modules
-			.map(module => `- ${module.meta.name} [${module.meta.id}]`)
+			.map(
+				module =>
+					`- ${module.meta.name} ${module.meta.version} [${module.meta.id}]`,
+			)
 			.forEach(line => this.log(line));
 	}
 
