@@ -26,7 +26,6 @@ export default class Watchdog extends Module {
 
 		for await (const event of watch(dir, { signal: this.ac.signal })) {
 			if (event.eventType != "change") return;
-			console.dir(event);
 
 			this.log("Updating config...");
 
