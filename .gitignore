@@ -1,0 +1,12 @@
+# Node
+/node_modules/
+*.log*
+
+# IDE
+/.vscode/
+
+# Output
+/dist/
+
+# User
+/cfg/
